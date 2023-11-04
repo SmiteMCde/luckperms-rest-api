@@ -25,6 +25,7 @@
 
 package me.lucko.luckperms.extension.rest;
 
+import me.lucko.luckperms.extension.rest.config.ConfigHandler;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.extension.Extension;
 
@@ -33,22 +34,29 @@ import net.luckperms.api.extension.Extension;
  */
 public class RestExtension implements Extension {
 
+    private static RestExtension instance;
+
     private final LuckPerms luckPerms;
+    private final ConfigHandler configHandler;
     private RestServer server;
 
     public RestExtension(LuckPerms luckPerms) {
+        instance = this;
+        this.configHandler = new ConfigHandler();
+
         this.luckPerms = luckPerms;
     }
 
     @Override
     public void load() {
-        int port = RestConfig.getInteger("http.port", 8080);
+        String host = configHandler.getHost();
+        int port = configHandler.getPort();
 
         Thread thread = Thread.currentThread();
         ClassLoader previousCtxClassLoader = thread.getContextClassLoader();
         thread.setContextClassLoader(RestExtension.class.getClassLoader());
         try {
-            this.server = new RestServer(this.luckPerms, port);
+            this.server = new RestServer(this.luckPerms, host, port);
         } finally {
             thread.setContextClassLoader(previousCtxClassLoader);
         }
@@ -61,4 +69,13 @@ public class RestExtension implements Extension {
             this.server = null;
         }
     }
+
+    public static RestExtension getInstance() {
+        return instance;
+    }
+
+    public ConfigHandler getConfigHandler() {
+        return this.configHandler;
+    }
+
 }

@@ -49,7 +49,6 @@ import net.luckperms.api.platform.Health;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.Set;
 
 import static io.javalin.apibuilder.ApiBuilder.delete;
@@ -68,19 +67,19 @@ public class RestServer implements AutoCloseable {
     private final ObjectMapper objectMapper;
     private final Javalin app;
 
-    public RestServer(LuckPerms luckPerms, int port) {
+    public RestServer(LuckPerms luckPerms, String host, int port) {
         LOGGER.info("[REST] Starting server...");
 
         this.objectMapper = new CustomObjectMapper();
 
         this.app = Javalin.create(this::configure)
-                .start(port);
+                .start(host, port);
 
         this.setupLogging(this.app);
         this.setupErrorHandlers(this.app);
         this.setupRoutes(this.app, luckPerms);
 
-        LOGGER.info("[REST] Startup complete! Listening on http://localhost:" + port);
+        LOGGER.info("[REST] Startup complete! Listening on http://" + host + ":" + port);
     }
 
     @Override
@@ -126,7 +125,7 @@ public class RestServer implements AutoCloseable {
 
         UserController userController = new UserController(luckPerms.getUserManager(), luckPerms.getTrackManager(), messagingService, this.objectMapper);
         GroupController groupController = new GroupController(luckPerms.getGroupManager(), messagingService, this.objectMapper);
-        TrackController trackController = new TrackController(luckPerms.getTrackManager(), luckPerms.getGroupManager(), messagingService, this.objectMapper);
+        TrackController trackController = new TrackController(luckPerms.getTrackManager(), luckPerms.getGroupManager(), messagingService);
         ActionController actionController = new ActionController(luckPerms.getActionLogger());
 
         app.routes(() -> {
@@ -134,15 +133,9 @@ public class RestServer implements AutoCloseable {
                 get("lookup", userController::lookup);
                 setupControllerRoutes(userController);
             });
-            path("group", () -> {
-                setupControllerRoutes(groupController);
-            });
-            path("track", () -> {
-                setupControllerRoutes(trackController);
-            });
-            path("action", () -> {
-                setupControllerRoutes(actionController);
-            });
+            path("group", () -> setupControllerRoutes(groupController));
+            path("track", () -> setupControllerRoutes(trackController));
+            path("action", () -> setupControllerRoutes(actionController));
         });
     }
 
@@ -193,14 +186,14 @@ public class RestServer implements AutoCloseable {
     }
 
     private void setupAuth(JavalinConfig config) {
-        if (RestConfig.getBoolean("auth", false)) {
-            Set<String> keys = ImmutableSet.copyOf(
-                    RestConfig.getStringList("auth.keys", Collections.emptyList())
-            );
+        if (RestExtension.getInstance().getConfigHandler().getAuth()) {
+            Set<String> keys = ImmutableSet.copyOf(RestExtension.getInstance().getConfigHandler().getAuthKeys().split(","));
 
             if (keys.isEmpty()) {
                 LOGGER.warn("[REST] Auth is enabled but there are no API keys registered!");
                 LOGGER.warn("[REST] Set some keys with the 'LUCKPERMS_REST_AUTH_KEYS' variable.");
+            } else {
+                LOGGER.info("[REST] Auth is enabled. " + keys.size() + " keys registered.");
             }
 
             config.accessManager((handler, ctx, routeRoles) -> {

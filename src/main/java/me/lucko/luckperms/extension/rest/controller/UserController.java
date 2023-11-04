@@ -30,7 +30,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
-import me.lucko.luckperms.extension.rest.RestConfig;
+import me.lucko.luckperms.extension.rest.RestExtension;
 import me.lucko.luckperms.extension.rest.model.PermissionCheckRequest;
 import me.lucko.luckperms.extension.rest.model.PermissionCheckResult;
 import me.lucko.luckperms.extension.rest.model.SearchRequest;
@@ -62,7 +62,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class UserController implements PermissionHolderController {
-    private static final boolean CACHE = RestConfig.getBoolean("cache.users", true);
+    private static final boolean CACHE = RestExtension.getInstance().getConfigHandler().getCacheUsers();
 
     private final UserManager userManager;
     private final TrackManager trackManager;
@@ -120,7 +120,7 @@ public class UserController implements PermissionHolderController {
 
     // GET /user/search
     @Override
-    public void search(Context ctx) throws Exception {
+    public void search(Context ctx) {
         NodeMatcher<? extends Node> matcher = SearchRequest.parse(ctx);
         CompletableFuture<List<UserSearchResult>> future = this.userManager.<Node>searchAll(matcher)
                 .thenApply(map -> map.entrySet().stream()
@@ -191,9 +191,7 @@ public class UserController implements PermissionHolderController {
         UUID uniqueId = pathParamAsUuid(ctx);
         CompletableFuture<Void> future = this.userManager.loadUser(uniqueId).thenCompose(user -> {
             user.data().clear();
-            return this.userManager.saveUser(user).thenRun(() -> {
-                this.messagingService.pushUserUpdate(user);
-            });
+            return this.userManager.saveUser(user).thenRun(() -> this.messagingService.pushUserUpdate(user));
         });
         ctx.future(future, result -> ctx.result("ok"));
     }

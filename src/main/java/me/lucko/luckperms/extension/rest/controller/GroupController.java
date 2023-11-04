@@ -30,7 +30,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
-import me.lucko.luckperms.extension.rest.RestConfig;
+import me.lucko.luckperms.extension.rest.RestExtension;
 import me.lucko.luckperms.extension.rest.model.GroupSearchResult;
 import me.lucko.luckperms.extension.rest.model.PermissionCheckRequest;
 import me.lucko.luckperms.extension.rest.model.PermissionCheckResult;
@@ -52,7 +52,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class GroupController implements PermissionHolderController {
-    private static final boolean CACHE = RestConfig.getBoolean("cache.groups", true);
+    private static final boolean CACHE = RestExtension.getInstance().getConfigHandler().getCacheGroups();
 
     private final GroupManager groupManager;
     private final MessagingService messagingService;
@@ -109,7 +109,7 @@ public class GroupController implements PermissionHolderController {
 
     // GET /group/search
     @Override
-    public void search(Context ctx) throws Exception {
+    public void search(Context ctx) {
         NodeMatcher<? extends Node> matcher = SearchRequest.parse(ctx);
         CompletableFuture<List<GroupSearchResult>> future = this.groupManager.<Node>searchAll(matcher)
                 .thenApply(map -> map.entrySet().stream()
@@ -369,13 +369,13 @@ public class GroupController implements PermissionHolderController {
 
     // POST /group/{id}/promote
     @Override
-    public void promote(Context ctx) throws Exception {
+    public void promote(Context ctx) {
         throw new UnsupportedOperationException();
     }
 
     // POST /group/{id}/demote
     @Override
-    public void demote(Context ctx) throws Exception {
+    public void demote(Context ctx) {
         throw new UnsupportedOperationException();
     }
 }

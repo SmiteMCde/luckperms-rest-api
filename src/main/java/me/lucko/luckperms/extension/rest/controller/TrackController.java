@@ -26,47 +26,31 @@
 package me.lucko.luckperms.extension.rest.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
-import me.lucko.luckperms.extension.rest.RestConfig;
-import me.lucko.luckperms.extension.rest.model.GroupSearchResult;
-import me.lucko.luckperms.extension.rest.model.PermissionCheckRequest;
-import me.lucko.luckperms.extension.rest.model.PermissionCheckResult;
-import me.lucko.luckperms.extension.rest.model.SearchRequest;
-import me.lucko.luckperms.extension.rest.util.ParamUtils;
-import net.luckperms.api.cacheddata.CachedMetaData;
+import me.lucko.luckperms.extension.rest.RestExtension;
 import net.luckperms.api.messaging.MessagingService;
-import net.luckperms.api.model.data.TemporaryNodeMergeStrategy;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.group.GroupManager;
-import net.luckperms.api.node.Node;
-import net.luckperms.api.node.matcher.NodeMatcher;
-import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.track.Track;
 import net.luckperms.api.track.TrackManager;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class TrackController {
-    private static final boolean CACHE = RestConfig.getBoolean("cache.tracks", true);
+    private static final boolean CACHE = RestExtension.getInstance().getConfigHandler().getCacheTracks();
 
     private final TrackManager trackManager;
     private final GroupManager groupManager;
     private final MessagingService messagingService;
-    private final ObjectMapper objectMapper;
 
-    public TrackController(TrackManager trackManager, GroupManager groupManager, MessagingService messagingService, ObjectMapper objectMapper) {
+    public TrackController(TrackManager trackManager, GroupManager groupManager, MessagingService messagingService) {
         this.trackManager = trackManager;
         this.groupManager = groupManager;
         this.messagingService = messagingService;
-        this.objectMapper = objectMapper;
     }
 
     private CompletableFuture<Track> loadTrackCached(String name) {

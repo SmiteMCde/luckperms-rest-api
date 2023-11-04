@@ -27,10 +27,12 @@ package me.lucko.luckperms.extension.rest.util;
 
 import net.luckperms.api.messaging.MessagingService;
 import net.luckperms.api.model.user.User;
+import org.jetbrains.annotations.NotNull;
 
 public class StubMessagingService implements MessagingService {
     public static final StubMessagingService INSTANCE = new StubMessagingService();
 
+    @NotNull
     @Override
     public String getName() {
         return "stub";
