@@ -30,7 +30,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.concurrent.ExecutorService;
@@ -50,6 +49,7 @@ public class ConfigBuilder {
         this.initFile();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void initFile() {
         if (!file.getParentFile().exists())
             file.getParentFile().mkdirs();
@@ -118,32 +118,12 @@ public class ConfigBuilder {
         return json.get(key).toString();
     }
 
-    public double getDouble(String key) {
-        return Double.parseDouble(json.get(key).toString());
-    }
-
-    public float getFloat(String key) {
-        return Float.parseFloat(json.get(key).toString());
-    }
-
-    public long getLong(String key) {
-        return Long.parseLong(json.get(key).toString());
-    }
-
     public int getInt(String key) {
         return Integer.parseInt(json.get(key).toString());
     }
 
     public boolean getBoolean(String key) {
         return Boolean.parseBoolean(json.get(key).toString());
-    }
-
-    public JSONObject getJsonObject(String key) {
-        try {
-            return (JSONObject) new JSONParser().parse(json.get(key).toString());
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

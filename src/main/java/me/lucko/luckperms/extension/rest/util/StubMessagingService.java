@@ -44,7 +44,7 @@ public class StubMessagingService implements MessagingService {
     }
 
     @Override
-    public void pushUserUpdate(User user) {
+    public void pushUserUpdate(@NotNull User user) {
 
     }
 }
